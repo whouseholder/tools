@@ -1,0 +1,158 @@
+# Text-to-SQL Agent Configuration
+
+# Application settings
+app:
+  name: "Text-to-SQL Agent"
+  version: "1.0.0"
+  debug: false
+  log_level: "INFO"
+
+# LLM Configuration
+llm:
+  # Small model for initial query generation
+  small_model:
+    provider: "openai"  # openai, anthropic
+    model_name: "gpt-3.5-turbo"
+    temperature: 0.0
+    max_tokens: 2000
+    timeout: 30
+  
+  # Large model for fallback
+  large_model:
+    provider: "openai"
+    model_name: "gpt-4-turbo-preview"
+    temperature: 0.0
+    max_tokens: 4000
+    timeout: 60
+  
+  # API keys (use environment variables in production)
+  openai_api_key: "${OPENAI_API_KEY}"
+  anthropic_api_key: "${ANTHROPIC_API_KEY}"
+
+# Vector Store Configuration
+vector_store:
+  # Primary store: chromadb or pinecone
+  provider: "chromadb"
+  
+  # ChromaDB settings
+  chromadb:
+    persist_directory: "./data/vector_db/chroma"
+    collection_name: "text_to_sql"
+    
+  # Pinecone settings
+  pinecone:
+    api_key: "${PINECONE_API_KEY}"
+    environment: "us-east-1-aws"
+    index_name: "text-to-sql"
+    dimension: 384
+  
+  # Embedding model
+  embedding_model: "all-MiniLM-L6-v2"
+  
+  # Similarity search
+  similarity_threshold: 0.85
+  max_results: 5
+
+# Metadata Store (Hive Metastore)
+metadata:
+  hive:
+    host: "localhost"
+    port: 10000
+    database: "default"
+    auth_mechanism: "PLAIN"
+    username: "${HIVE_USER}"
+    password: "${HIVE_PASSWORD}"
+  
+  # Metadata indexing
+  index_refresh_interval: 3600  # seconds
+  cache_ttl: 1800  # seconds
+
+# Query Generation and Validation
+query:
+  # SQL dialect
+  dialect: "hive"  # hive, mysql, postgres, etc.
+  
+  # Validation
+  syntax_check_enabled: true
+  max_retries_per_model: 2
+  
+  # Execution
+  max_execution_time: 300  # seconds
+  max_result_rows: 10000
+
+# Validation and Checks
+validation:
+  # Question validation
+  min_question_length: 5
+  max_question_length: 500
+  
+  # Relevance checks
+  check_relevance: true
+  check_answerability: true
+  
+  # Similarity matching
+  check_similar_questions: true
+  prompt_on_similar: true  # Ask user if similar question found
+
+# Feedback System
+feedback:
+  enabled: true
+  storage_path: "./data/feedback/feedback.db"
+  
+  # Eval mode - automatically store validated Q&A
+  eval_mode: false
+  auto_store_threshold: 0.9  # Confidence threshold for auto-storage
+  
+  # Manual feedback
+  allow_user_feedback: true
+
+# Memory Management
+memory:
+  # Conversation context
+  max_context_messages: 10
+  max_context_tokens: 4000
+  
+  # Cache
+  cache_enabled: true
+  cache_path: "./data/cache"
+  cache_ttl: 3600
+
+# Visualization
+visualization:
+  default_format: "table"
+  
+  # Chart generation
+  auto_suggest_charts: true
+  supported_chart_types:
+    - "bar"
+    - "line"
+    - "scatter"
+    - "pie"
+    - "heatmap"
+    - "histogram"
+
+# API Configuration
+api:
+  host: "0.0.0.0"
+  port: 8000
+  cors_origins:
+    - "http://localhost:3000"
+    - "http://localhost:8000"
+  
+  # Rate limiting
+  rate_limit:
+    enabled: true
+    requests_per_minute: 30
+
+# Microsoft Teams Integration
+teams:
+  enabled: false
+  app_id: "${TEAMS_APP_ID}"
+  app_password: "${TEAMS_APP_PASSWORD}"
+  endpoint: "/api/teams/messages"
+
+# Testing
+testing:
+  mock_llm: false
+  mock_database: false
+  test_data_path: "./tests/data"

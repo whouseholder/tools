@@ -1,0 +1,149 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "text-to-sql-agent"
+version = "1.0.0"
+description = "AI-powered natural language to SQL query generation with intelligent validation and feedback loops"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Text-to-SQL Agent Contributors"}
+]
+keywords = [
+    "sql",
+    "natural-language",
+    "llm",
+    "text-to-sql",
+    "query-generation",
+    "ai",
+    "machine-learning",
+    "cloudera"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Database",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0.1",
+    "pydantic>=2.5.3",
+    "pydantic-settings>=2.1.0",
+    "openai>=1.12.0",
+    "anthropic>=0.18.1",
+    "chromadb>=0.4.22",
+    "sentence-transformers>=2.3.1",
+    "sqlalchemy>=2.0.25",
+    "pyhive>=0.7.0",
+    "sqlparse>=0.4.4",
+    "fastapi>=0.109.2",
+    "uvicorn[standard]>=0.27.1",
+    "pandas>=2.2.0",
+    "plotly>=5.18.0",
+    "matplotlib>=3.8.2",
+    "seaborn>=0.13.2",
+    "loguru>=0.7.2",
+    "rich>=13.7.0",
+    "tenacity>=8.2.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.4",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+    "black>=24.0.0",
+    "flake8>=7.0.0",
+    "mypy>=1.8.0",
+    "isort>=5.13.0",
+]
+
+teams = [
+    "botbuilder-core>=4.15.0",
+    "botbuilder-schema>=4.15.0",
+    "botbuilder-integration-aiohttp>=4.15.0",
+]
+
+cloudera = [
+    "cmlapi>=0.0.10",
+]
+
+all = [
+    "text-to-sql-agent[dev,teams,cloudera]",
+]
+
+[project.urls]
+Homepage = "https://github.com/your-org/text-to-sql-agent"
+Documentation = "https://github.com/your-org/text-to-sql-agent/docs"
+Repository = "https://github.com/your-org/text-to-sql-agent"
+Changelog = "https://github.com/your-org/text-to-sql-agent/CHANGELOG.md"
+
+[project.scripts]
+text-to-sql-agent = "src.main:main"
+
+[tool.setuptools]
+packages = ["src"]
+
+[tool.black]
+line-length = 100
+target-version = ['py39', 'py310', 'py311']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--verbose",
+    "--strict-markers",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]

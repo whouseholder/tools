@@ -1,0 +1,179 @@
+# Example Terraform Configuration for RHEL Upgrade Automation
+# Copy this file to terraform.tfvars and customize for your environment
+
+# =============================================================================
+# CLUSTER HOSTS CONFIGURATION
+# =============================================================================
+# Define all hosts in your CDP cluster with their roles
+# Roles: master, worker, edge
+#
+# master: Hosts running CM Server, NameNode, ResourceManager, etc.
+# worker: Hosts running DataNodes, NodeManagers
+# edge: Gateway/client hosts with no core services
+
+cluster_hosts = [
+  # Master Nodes (will be upgraded sequentially)
+  {
+    hostname    = "cdp-master01.example.com"
+    ip_address  = "10.0.1.10"
+    role        = "master"
+    description = "Primary Master - CM Server, NameNode"
+  },
+  {
+    hostname    = "cdp-master02.example.com"
+    ip_address  = "10.0.1.11"
+    role        = "master"
+    description = "Secondary Master - Standby NameNode"
+  },
+  {
+    hostname    = "cdp-master03.example.com"
+    ip_address  = "10.0.1.12"
+    role        = "master"
+    description = "Tertiary Master - ResourceManager, HBase Master"
+  },
+
+  # Worker Nodes (will be upgraded in batches)
+  {
+    hostname    = "cdp-worker01.example.com"
+    ip_address  = "10.0.2.10"
+    role        = "worker"
+    description = "Data Node 1"
+  },
+  {
+    hostname    = "cdp-worker02.example.com"
+    ip_address  = "10.0.2.11"
+    role        = "worker"
+    description = "Data Node 2"
+  },
+  {
+    hostname    = "cdp-worker03.example.com"
+    ip_address  = "10.0.2.12"
+    role        = "worker"
+    description = "Data Node 3"
+  },
+  {
+    hostname    = "cdp-worker04.example.com"
+    ip_address  = "10.0.2.13"
+    role        = "worker"
+    description = "Data Node 4"
+  },
+  {
+    hostname    = "cdp-worker05.example.com"
+    ip_address  = "10.0.2.14"
+    role        = "worker"
+    description = "Data Node 5"
+  },
+
+  # Edge Nodes (will be upgraded in parallel)
+  {
+    hostname    = "cdp-edge01.example.com"
+    ip_address  = "10.0.3.10"
+    role        = "edge"
+    description = "Gateway Node 1"
+  },
+  {
+    hostname    = "cdp-edge02.example.com"
+    ip_address  = "10.0.3.11"
+    role        = "edge"
+    description = "Gateway Node 2"
+  }
+]
+
+# =============================================================================
+# CLOUDERA MANAGER CONFIGURATION
+# =============================================================================
+
+# Hostname or IP of the Cloudera Manager server
+# Must match one of the master nodes above
+cm_server_host = "cdp-master01.example.com"
+
+# Cloudera Manager API credentials
+cm_api_user     = "admin"
+cm_api_password = "your-secure-password-here"  # CHANGE THIS!
+
+# Name of your CDP cluster (as shown in CM UI)
+cluster_name = "Production-Cluster"
+
+# =============================================================================
+# SSH CONFIGURATION
+# =============================================================================
+
+# SSH user for connecting to hosts
+# Must have sudo/root access
+ssh_user = "root"
+
+# Path to SSH private key
+# Ensure this key has access to all hosts
+ssh_private_key = "~/.ssh/id_rsa"
+
+# =============================================================================
+# UPGRADE CONFIGURATION
+# =============================================================================
+
+# Target RHEL version
+# Default: 8.10 (latest RHEL 8)
+target_rhel_version = "8.10"
+
+# Path for backups and reports
+# Ensure sufficient disk space on all hosts
+backup_path = "/backup/rhel-upgrade"
+
+# Number of worker nodes to upgrade in parallel
+# Recommendation:
+#   - Small cluster (<10 workers): 2-3
+#   - Medium cluster (10-50 workers): 3-5
+#   - Large cluster (>50 workers): 5-10
+# Consider HDFS replication factor when setting this
+worker_batch_size = 3
+
+# Enable automatic rollback on failure
+# When true, will attempt to prevent further damage on failure
+enable_rollback = true
+
+# Maximum time to wait for each node upgrade (minutes)
+# Includes: backup, leapp execution, reboot, and comeback
+max_upgrade_time = 120
+
+# Create VM snapshots before upgrade (if supported by infrastructure)
+# Only works if VMs support snapshot API
+pre_upgrade_snapshot = false
+
+# Services to skip during stop/start
+# Use if certain services should remain stopped
+skip_services = []
+# Example: skip_services = ["HUE", "OOZIE"]
+
+# =============================================================================
+# EXAMPLE CONFIGURATIONS FOR DIFFERENT CLUSTER SIZES
+# =============================================================================
+
+# SMALL CLUSTER (3-5 nodes)
+# --------------------------
+# worker_batch_size = 2
+# max_upgrade_time = 120
+# Total estimated time: 3-4 hours
+
+# MEDIUM CLUSTER (10-20 nodes)
+# -----------------------------
+# worker_batch_size = 3
+# max_upgrade_time = 120
+# Total estimated time: 5-6 hours
+
+# LARGE CLUSTER (50+ nodes)
+# --------------------------
+# worker_batch_size = 5
+# max_upgrade_time = 90
+# Total estimated time: 8-12 hours
+
+# =============================================================================
+# ADVANCED SETTINGS (Usually don't need to change)
+# =============================================================================
+
+# These are defined in variables.tf with sensible defaults
+# Uncomment to override
+
+# max_upgrade_time = 120
+# pre_upgrade_snapshot = false
+# skip_services = []
+
+

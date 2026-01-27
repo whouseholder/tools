@@ -1,0 +1,40 @@
+# Sample configuration for Iceberg metadata sync
+
+# Replication settings
+replication:
+  source_path: "/ifs/prod/warehouse"
+  replicated_path: "/ifs/dr/warehouse"
+
+# Iceberg settings
+iceberg:
+  catalog_name: "dr_catalog"
+  warehouse_path: "/ifs/dr/warehouse"
+  
+  # Table properties
+  table_properties:
+    format-version: "2"
+    write.format.default: "parquet"
+    write.parquet.compression-codec: "snappy"
+
+# Sync settings
+sync:
+  state_dir: "/var/lib/iceberg_sync"
+  log_level: "INFO"
+  log_file: "/var/log/iceberg_sync/sync.log"
+
+# Tables to sync
+tables:
+  - database: "db"
+    table: "users"
+  - database: "db"
+    table: "transactions"
+  - database: "analytics"
+    table: "events"
+
+# Spark configuration (optional overrides)
+spark:
+  driver_memory: "4g"
+  executor_memory: "8g"
+  executor_cores: 4
+  dynamic_allocation: true
+

@@ -1,0 +1,88 @@
+# Example Configuration with Auto-Discovery from Cloudera Manager
+# This configuration automatically discovers all cluster hosts from CM
+
+# =============================================================================
+# AUTO-DISCOVERY MODE (Recommended)
+# =============================================================================
+
+# Enable automatic host discovery from Cloudera Manager
+auto_discover_hosts = true
+
+# =============================================================================
+# CLOUDERA MANAGER CONNECTION (Required for Auto-Discovery)
+# =============================================================================
+
+# Cloudera Manager server hostname or IP
+cm_server_host  = "master01.example.com"
+
+# Cloudera Manager API credentials
+cm_api_user     = "admin"
+cm_api_password = "your-secure-password"  # CHANGE THIS!
+
+# Cluster name (leave empty to auto-detect first cluster)
+cluster_name    = "Production-Cluster"  # Or set to "" for auto-detection
+
+# =============================================================================
+# SSH CONFIGURATION
+# =============================================================================
+
+# SSH user for connecting to hosts
+ssh_user        = "root"
+
+# Path to SSH private key
+ssh_private_key = "~/.ssh/id_rsa"
+
+# =============================================================================
+# UPGRADE SETTINGS
+# =============================================================================
+
+# Target RHEL version
+target_rhel_version = "8.10"
+
+# Path for backups and reports
+backup_path = "/backup/rhel-upgrade"
+
+# Number of worker nodes to upgrade in parallel
+# Will be automatically calculated based on discovered workers
+worker_batch_size = 3
+
+# Enable automatic rollback on failure
+enable_rollback = true
+
+# =============================================================================
+# NOTES ON AUTO-DISCOVERY
+# =============================================================================
+
+# When auto_discover_hosts = true:
+# - Terraform will query CM API to get all cluster hosts
+# - Host roles are automatically determined based on services:
+#   * master: Hosts running NameNode, ResourceManager, HBase Master, etc.
+#   * worker: Hosts running DataNode, NodeManager
+#   * edge:   Hosts without data services (gateways, HUE, etc.)
+# - You don't need to manually specify cluster_hosts
+# - CM server host and cluster name are auto-detected if not specified
+
+# Advantages:
+# ✓ No manual host configuration needed
+# ✓ Always up-to-date with cluster topology
+# ✓ Automatic role detection
+# ✓ Less prone to configuration errors
+
+# Requirements:
+# - CM API must be accessible from Terraform execution host
+# - Valid CM credentials
+# - jq must be installed on Terraform execution host
+
+# =============================================================================
+# OPTIONAL: WORKER BATCH SIZE CALCULATION
+# =============================================================================
+
+# You can set worker_batch_size dynamically based on cluster size:
+# Small cluster (<10 workers): 2
+# Medium cluster (10-30 workers): 3-5
+# Large cluster (>30 workers): 5-10
+
+# Or use this formula: floor(total_workers / replication_factor) - 1
+# Example: 15 workers, replication 3 → batch_size = floor(15/3) - 1 = 4
+
+

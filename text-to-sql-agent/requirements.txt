@@ -1,0 +1,56 @@
+# Core dependencies
+python-dotenv==1.0.0
+pyyaml==6.0.1
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# LLM and AI
+openai==1.12.0
+anthropic==0.18.1
+langchain==0.1.9
+langchain-community==0.0.24
+langchain-openai==0.0.5
+
+# Vector stores
+chromadb==0.4.22
+pinecone-client==3.0.3
+sentence-transformers==2.3.1
+
+# Database
+sqlalchemy==2.0.25
+pyhive==0.7.0
+sqlparse==0.4.4
+thrift==0.16.0
+sasl==0.3.1
+thrift-sasl==0.4.3
+
+# API and Web
+fastapi==0.109.2
+uvicorn[standard]==0.27.1
+websockets==12.0
+aiohttp==3.9.3
+python-multipart==0.0.9
+
+# Microsoft Teams integration
+botbuilder-core==4.15.0
+botbuilder-schema==4.15.0
+botbuilder-integration-aiohttp==4.15.0
+
+# Visualization
+pandas==2.2.0
+plotly==5.18.0
+matplotlib==3.8.2
+seaborn==0.13.2
+
+# Testing
+pytest==8.0.0
+pytest-asyncio==0.23.4
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+httpx==0.26.0
+
+# Utilities
+tenacity==8.2.3
+jinja2==3.1.3
+rich==13.7.0
+loguru==0.7.2

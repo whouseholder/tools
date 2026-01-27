@@ -1,0 +1,21 @@
+include README.md
+include LICENSE
+include CHANGELOG.md
+include CONTRIBUTING.md
+include QUICK_REFERENCE.md
+include TELCO_TEST_SUITE.md
+include requirements.txt
+include pyproject.toml
+include setup.cfg
+
+recursive-include config *.yaml
+recursive-include docs *.md
+recursive-include cloudera *.py *.sh *.yaml *.txt *.md
+recursive-include scripts *.py *.sh
+recursive-include web_ui *.html *.css *.js
+recursive-include tests *.py *.yaml
+
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude *~
+global-exclude .DS_Store

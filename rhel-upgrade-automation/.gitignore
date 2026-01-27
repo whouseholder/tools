@@ -1,0 +1,47 @@
+# Terraform files
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfvars
+!terraform.tfvars.example
+*.plan
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Logs
+*.log
+*.txt
+!requirements.txt
+
+# Backup files
+*.backup
+*.bak
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Support bundles
+support-bundle-*.tar.gz
+
+# Reports
+pre-upgrade-reports/
+post-upgrade-reports/
+
+# Temporary files
+tmp/
+temp/
+
+

@@ -1,0 +1,137 @@
+# Cloudera AI Inference Model Configuration
+
+# Model metadata
+model:
+  name: "text-to-sql-agent"
+  version: "1.0.0"
+  description: "Text-to-SQL Agent for natural language query generation"
+  
+# Runtime configuration
+runtime:
+  python_version: "3.9"
+  framework: "custom"
+  
+# Resource requirements
+resources:
+  cpu:
+    min: 1.0
+    max: 4.0
+    default: 2.0
+  memory:
+    min: 2
+    max: 8
+    default: 4
+  gpu:
+    enabled: false
+    
+# Scaling configuration
+scaling:
+  min_replicas: 1
+  max_replicas: 10
+  target_cpu_utilization: 70
+  target_memory_utilization: 80
+  scale_down_delay: 300  # seconds
+  
+# Health check configuration
+health_check:
+  enabled: true
+  endpoint: "/health"
+  interval: 30  # seconds
+  timeout: 5  # seconds
+  failure_threshold: 3
+  
+# Monitoring
+monitoring:
+  metrics_enabled: true
+  logging_enabled: true
+  log_level: "INFO"
+  
+# Model endpoints
+endpoints:
+  - name: "predict"
+    path: "/predict"
+    method: "POST"
+    timeout: 60
+    
+  - name: "batch_predict"
+    path: "/batch_predict"
+    method: "POST"
+    timeout: 300
+    
+  - name: "feedback"
+    path: "/feedback"
+    method: "POST"
+    timeout: 10
+    
+  - name: "health"
+    path: "/health"
+    method: "GET"
+    timeout: 5
+    
+  - name: "metadata"
+    path: "/metadata"
+    method: "GET"
+    timeout: 5
+    
+# Environment variables (will be injected at runtime)
+environment:
+  # LLM Configuration
+  OPENAI_API_KEY: "${OPENAI_API_KEY}"
+  
+  # Database Configuration
+  HIVE_HOST: "${HIVE_HOST}"
+  HIVE_PORT: "${HIVE_PORT:-10000}"
+  HIVE_USER: "${HIVE_USER}"
+  HIVE_PASSWORD: "${HIVE_PASSWORD}"
+  HIVE_DATABASE: "${HIVE_DATABASE}"
+  
+  # Vector Store
+  VECTOR_STORE_PATH: "/app/data/vector_db"
+  
+  # Feedback Storage
+  FEEDBACK_DB_PATH: "/app/data/feedback/feedback.db"
+  
+  # Logging
+  LOG_LEVEL: "INFO"
+  LOG_PATH: "/app/logs"
+  
+# Data volumes
+volumes:
+  - name: "vector-store"
+    path: "/app/data/vector_db"
+    size: "10Gi"
+    
+  - name: "feedback"
+    path: "/app/data/feedback"
+    size: "5Gi"
+    
+  - name: "logs"
+    path: "/app/logs"
+    size: "5Gi"
+    
+# Security
+security:
+  authentication:
+    enabled: true
+    type: "api_key"
+  
+  authorization:
+    enabled: false
+    
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 100
+    burst: 20
+    
+# A/B Testing (for future use)
+ab_testing:
+  enabled: false
+  traffic_split:
+    - model_version: "1.0.0"
+      percentage: 100
+      
+# Canary Deployment (for future use)
+canary:
+  enabled: false
+  percentage: 10
+  duration: 3600  # seconds

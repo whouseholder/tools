@@ -1,0 +1,80 @@
+# MINIMAL CONFIGURATION - Just 4 Required Settings!
+# Everything else uses smart defaults and auto-discovery
+
+# =============================================================================
+# REQUIRED: Cloudera Manager Connection
+# =============================================================================
+
+cm_server_host  = "master01.example.com"  # Your CM server hostname
+cm_api_password = "your-password"          # CHANGE THIS!
+
+# =============================================================================
+# REQUIRED: SSH Access
+# =============================================================================
+
+ssh_private_key = "~/.ssh/id_rsa"         # Path to your SSH key
+
+# =============================================================================
+# THAT'S IT! Everything else is automatically configured with smart defaults
+# =============================================================================
+
+# What happens automatically:
+# ✓ auto_discover_hosts = true           (discovers all hosts from CM)
+# ✓ cm_api_user = "admin"                (default CM user)
+# ✓ cluster_name = <first cluster found> (auto-detected)
+# ✓ ssh_user = "root"                    (standard SSH user)
+# ✓ target_rhel_version = "8.10"         (latest RHEL 8)
+# ✓ worker_batch_size = <calculated>     (based on cluster size)
+# ✓ backup_path = "/backup/rhel-upgrade" (standard location)
+# ✓ enable_rollback = true               (safety first)
+
+# =============================================================================
+# OPTIONAL: Customize if needed (uncomment to override defaults)
+# =============================================================================
+
+# cm_api_user         = "admin"                    # CM username
+# cluster_name        = "Production-Cluster"       # Specific cluster name
+# ssh_user            = "root"                     # SSH username
+# target_rhel_version = "8.10"                     # Target RHEL version
+# worker_batch_size   = 3                          # Parallel worker upgrades
+# backup_path         = "/backup/rhel-upgrade"     # Backup location
+# enable_rollback     = true                       # Auto rollback on failure
+# max_upgrade_time    = 120                        # Max minutes per node
+
+# =============================================================================
+# ADVANCED: Manual host configuration (if you don't want auto-discovery)
+# =============================================================================
+
+# To disable auto-discovery and manually specify hosts:
+# auto_discover_hosts = false
+# cluster_hosts = [
+#   {
+#     hostname    = "master01.example.com"
+#     ip_address  = "10.0.1.10"
+#     role        = "master"
+#     description = "CM Server, NameNode"
+#   },
+#   # ... list all hosts manually
+# ]
+
+# =============================================================================
+# HOW TO USE THIS CONFIGURATION
+# =============================================================================
+
+# 1. Copy this file:
+#    cp terraform-minimal.tfvars.example terraform.tfvars
+#
+# 2. Edit just 4 required settings:
+#    - cm_server_host
+#    - cm_api_password
+#    - ssh_private_key
+#    - (optionally) cluster_name if you have multiple clusters
+#
+# 3. Run:
+#    terraform init
+#    terraform plan
+#    terraform apply upgrade.plan
+#
+# That's it! Everything else is handled automatically.
+
+

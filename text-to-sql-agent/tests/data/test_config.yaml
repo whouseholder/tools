@@ -1,0 +1,107 @@
+# Test configuration (minimal for testing)
+
+app:
+  name: "Text-to-SQL Agent Test"
+  version: "1.0.0"
+  debug: true
+  log_level: "DEBUG"
+
+llm:
+  small_model:
+    provider: "openai"
+    model_name: "gpt-3.5-turbo"
+    temperature: 0.0
+    max_tokens: 2000
+    timeout: 30
+  
+  large_model:
+    provider: "openai"
+    model_name: "gpt-4-turbo-preview"
+    temperature: 0.0
+    max_tokens: 4000
+    timeout: 60
+  
+  openai_api_key: "test-key"
+  anthropic_api_key: ""
+
+vector_store:
+  provider: "chromadb"
+  embedding_model: "all-MiniLM-L6-v2"
+  similarity_threshold: 0.85
+  max_results: 5
+  chromadb:
+    persist_directory: "./tests/data/vector_db"
+    collection_name: "test_collection"
+  pinecone:
+    api_key: ""
+    environment: ""
+    index_name: ""
+    dimension: 384
+
+metadata:
+  hive:
+    host: "localhost"
+    port: 10000
+    database: "default"
+    auth_mechanism: "PLAIN"
+    username: "test"
+    password: "test"
+  index_refresh_interval: 3600
+  cache_ttl: 1800
+
+query:
+  dialect: "hive"
+  syntax_check_enabled: true
+  max_retries_per_model: 2
+  max_execution_time: 300
+  max_result_rows: 10000
+
+validation:
+  min_question_length: 5
+  max_question_length: 500
+  check_relevance: true
+  check_answerability: true
+  check_similar_questions: true
+  prompt_on_similar: true
+
+feedback:
+  enabled: true
+  storage_path: "./tests/data/feedback.db"
+  eval_mode: false
+  auto_store_threshold: 0.9
+  allow_user_feedback: true
+
+memory:
+  max_context_messages: 10
+  max_context_tokens: 4000
+  cache_enabled: false
+  cache_path: "./tests/data/cache"
+  cache_ttl: 3600
+
+visualization:
+  default_format: "table"
+  auto_suggest_charts: true
+  supported_chart_types:
+    - "bar"
+    - "line"
+    - "scatter"
+    - "pie"
+    - "heatmap"
+    - "histogram"
+
+api:
+  host: "127.0.0.1"
+  port: 8001
+  cors_origins:
+    - "http://localhost:3000"
+
+teams:
+  enabled: false
+  app_id: ""
+  app_password: ""
+  endpoint: "/api/teams/messages"
+
+testing:
+  mock_llm: true
+  mock_database: true
+  test_data_path: "./tests/data"

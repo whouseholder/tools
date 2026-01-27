@@ -1,0 +1,15 @@
+# Core dependencies
+pyspark>=3.2.0,<3.6.0
+
+# Iceberg support (will be loaded via --packages in spark-submit)
+# org.apache.iceberg:iceberg-spark-runtime-3.3_2.12:1.2.0
+
+# Utilities
+pyyaml>=6.0
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-mock>=3.11.1
+
+# Testing
+chispa>=0.9.3  # PySpark test utilities
+
