@@ -28,11 +28,13 @@ class LLMConfig(BaseModel):
 
 class VectorStoreConfig(BaseModel):
     """Vector store configuration."""
-    provider: str = "chromadb"
+    provider: str = "simple"
     embedding_model: str = "all-MiniLM-L6-v2"
     similarity_threshold: float = 0.85
     max_results: int = 5
+    simple: Dict[str, Any] = {}
     chromadb: Dict[str, Any] = {}
+    qdrant: Dict[str, Any] = {}
     pinecone: Dict[str, Any] = {}
 
 

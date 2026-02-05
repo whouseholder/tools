@@ -56,50 +56,30 @@ The Text-to-SQL Agent is an enterprise-ready application that converts natural l
 
 ## Quick Start
 
-### Prerequisites
-
-- Python 3.9 or higher
-- Access to Hive metastore
-- OpenAI API key (or Anthropic)
-- 4GB+ RAM, 10GB+ disk space
-
-### Installation
+### Local Testing (Recommended)
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd text-to-sql-agent
+# Set your OpenAI API key
+export OPENAI_API_KEY="sk-your-key-here"
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Configure application
-cp config/config.example.yaml config/config.yaml
-# Edit config.yaml with your credentials
-
-# Initialize metadata index
-python scripts/init_vector_stores.py
-
-# Start the application
-python src/main.py
+# Launch the Gradio UI
+python launch.py
 ```
 
-The API will be available at `http://localhost:8000`
+Open http://localhost:7860 in your browser.
 
-### Try It Out
+**Note:** On Python 3.14, the launcher automatically uses a simplified mode (without ChromaDB) for compatibility.
 
-Test with our sample telecommunications dataset ([see full guide](docs/TELCO_TEST_SUITE.md)):
+### Try Example Questions
 
-```bash
-# Create sample database
-python scripts/create_telco_db.py
-
-# Run test questions
-python scripts/test_telco_questions.py
-
-# Interactive testing
-./scripts/telco_menu.sh
 ```
+What are the top 10 customers by lifetime value?
+Show total revenue by service plan
+How many customers are on premium plans?
+List active devices by manufacturer
+```
+
+For more details, see `READY_TO_RUN.md`.
 
 ## Deployment
 
@@ -253,6 +233,8 @@ text-to-sql-agent/
 
 ### Getting Started
 - **[Quick Reference](docs/QUICK_REFERENCE.md)** - Common tasks and commands
+- **[Gradio UI Guide](src/ui/README.md)** - Interactive chat interface
+- **[Tool Documentation](docs/TOOLS.md)** - All 10 agentic tools explained
 - **[Project Overview](docs/PROJECT_OVERVIEW.md)** - Executive summary for stakeholders
 - **[Telco Demo](docs/TELCO_TEST_SUITE.md)** - Sample data and test cases
 

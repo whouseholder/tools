@@ -11,10 +11,12 @@ langchain==0.1.9
 langchain-community==0.0.24
 langchain-openai==0.0.5
 
-# Vector stores
-chromadb==0.4.22
-pinecone-client==3.0.3
+# Vector stores - Using in-memory simple vector store for Python 3.14 compatibility
+# chromadb==0.4.22  # Not compatible with Python 3.14 yet
+# qdrant-client==1.7.0  # Not compatible with Python 3.14 yet
 sentence-transformers==2.3.1
+numpy==1.26.3
+scikit-learn==1.4.0
 
 # Database
 sqlalchemy==2.0.25
@@ -30,6 +32,9 @@ uvicorn[standard]==0.27.1
 websockets==12.0
 aiohttp==3.9.3
 python-multipart==0.0.9
+
+# Gradio UI
+gradio==4.15.0
 
 # Microsoft Teams integration
 botbuilder-core==4.15.0

@@ -1,0 +1,11 @@
+customer_id,first_name,last_name,email,phone_number,address,city,state,zip_code,account_status,plan_id,signup_date,credit_score,lifetime_value,churn_risk_score
+421,Patricia,Johnson,patricia.johnson421@email.com,555-164-3484,4381 Oak St,Los Angeles,CA,16006,active,7,2025-06-26,813,14983.31,0.45
+208,Daniel,Johnson,daniel.johnson208@email.com,555-989-2570,8329 Maple St,San Diego,CA,12120,active,2,2023-02-07,833,14969.07,0.52
+84,Richard,Anderson,richard.anderson84@email.com,555-426-4773,7549 Main St,San Diego,CA,81743,active,10,2022-11-01,682,14961.99,0.22
+390,Thomas,Brown,thomas.brown390@email.com,555-253-3168,7080 Main St,Philadelphia,PA,92486,active,7,2025-11-05,740,14935.35,0.91
+3,Lisa,Johnson,lisa.johnson3@email.com,555-853-9144,8599 Maple St,Houston,TX,72244,cancelled,3,2023-12-16,576,14929.4,0.48
+477,David,Martin,david.martin477@email.com,555-918-9651,3118 Maple St,San Diego,CA,69759,active,8,2023-07-03,699,14921.34,0.84
+275,Lisa,Davis,lisa.davis275@email.com,555-239-2159,4657 Main St,Philadelphia,PA,61911,active,1,2025-12-10,774,14878.32,0.26
+86,Richard,Hernandez,richard.hernandez86@email.com,555-528-7526,5026 Park St,Los Angeles,CA,55549,active,7,2025-07-26,617,14835.64,0.2
+30,John,Wilson,john.wilson30@email.com,555-318-1542,8806 Main St,Fort Worth,TX,82780,active,3,2023-08-20,573,14813.63,0.91
+229,John,Jackson,john.jackson229@email.com,555-937-5489,7349 Maple St,Charlotte,NC,49980,active,10,2025-10-30,683,14759.46,0.27

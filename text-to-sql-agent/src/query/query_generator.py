@@ -23,10 +23,17 @@ class QueryGenerator:
         self,
         question: str,
         relevant_tables: List[Dict[str, Any]],
-        similar_qa: Optional[List[Dict[str, Any]]] = None
+        similar_qa: Optional[List[Dict[str, Any]]] = None,
+        max_validation_retries: int = 3
     ) -> Dict[str, Any]:
         """
-        Generate SQL query from question and metadata.
+        Generate SQL query from question and metadata with validation and self-correction.
+        
+        Args:
+            question: Natural language question
+            relevant_tables: Metadata about tables to query
+            similar_qa: Optional similar Q&A pairs
+            max_validation_retries: Maximum attempts to generate valid SQL (default: 3)
         
         Returns dict with 'query', 'model_used', 'attempts', and 'validation_passed'.
         """
@@ -36,45 +43,70 @@ class QueryGenerator:
         # System prompt with version info
         system_prompt = self._build_system_prompt()
         
-        # Try generation with fallback
-        try:
-            result = self.llm_manager.generate_with_fallback(
-                prompt=prompt,
-                system_prompt=system_prompt,
-                max_retries_per_model=self.config.max_retries_per_model
-            )
+        previous_query = None
+        validation_errors = None
+        
+        # Retry loop for validation and self-correction
+        for attempt in range(max_validation_retries):
+            logger.info(f"Query generation attempt {attempt + 1}/{max_validation_retries}")
             
-            # Extract SQL and confidence from response
-            query, llm_confidence = self._extract_sql_and_confidence(result['text'])
-            
-            # Validate syntax
-            is_valid, validation_errors = self._validate_syntax(query)
-            
-            if not is_valid and self.config.syntax_check_enabled:
-                # Try to fix the query
-                logger.warning(f"Query validation failed: {validation_errors}")
-                fixed_query = self._fix_query(
-                    query, 
-                    validation_errors, 
-                    result['model_used']
+            try:
+                # Build correction prompt if this is a retry
+                if attempt > 0 and previous_query and validation_errors:
+                    correction_prompt = self._build_correction_prompt(
+                        question, prompt, previous_query, validation_errors
+                    )
+                    generation_prompt = correction_prompt
+                else:
+                    generation_prompt = prompt
+                
+                # Try generation with fallback
+                result = self.llm_manager.generate_with_fallback(
+                    prompt=generation_prompt,
+                    system_prompt=system_prompt,
+                    max_retries_per_model=self.config.max_retries_per_model
                 )
                 
-                if fixed_query:
-                    query = fixed_query
-                    is_valid, validation_errors = self._validate_syntax(query)
-            
-            return {
-                'query': query,
-                'model_used': result['model_used'],
-                'attempts': result['attempts'],
-                'validation_passed': is_valid,
-                'validation_errors': validation_errors if not is_valid else None,
-                'llm_confidence': llm_confidence
-            }
-            
-        except Exception as e:
-            logger.error(f"Query generation failed: {e}")
-            raise
+                # Extract SQL and confidence from response
+                query, llm_confidence = self._extract_sql_and_confidence(result['text'])
+                
+                # Validate syntax
+                is_valid, validation_errors = self._validate_syntax(query)
+                
+                if is_valid:
+                    logger.info(f"✅ Valid SQL generated on attempt {attempt + 1}")
+                    return {
+                        'query': query,
+                        'model_used': result['model_used'],
+                        'attempts': result['attempts'],
+                        'validation_passed': True,
+                        'validation_errors': None,
+                        'llm_confidence': llm_confidence
+                    }
+                else:
+                    logger.warning(f"❌ Validation failed on attempt {attempt + 1}: {validation_errors}")
+                    previous_query = query
+                    
+                    # If this is the last attempt, return with validation failure
+                    if attempt == max_validation_retries - 1:
+                        logger.error(f"Failed to generate valid SQL after {max_validation_retries} attempts")
+                        return {
+                            'query': query,
+                            'model_used': result['model_used'],
+                            'attempts': result['attempts'],
+                            'validation_passed': False,
+                            'validation_errors': validation_errors,
+                            'llm_confidence': llm_confidence
+                        }
+                    
+            except Exception as e:
+                logger.error(f"Query generation attempt {attempt + 1} failed: {e}")
+                if attempt == max_validation_retries - 1:
+                    raise
+                # Continue to next attempt
+        
+        # Should not reach here, but just in case
+        raise Exception("Query generation failed after all retries")
     
     def _build_system_prompt(self) -> str:
         """Build system prompt with version and dialect info."""
@@ -178,11 +210,17 @@ Version: {self.config.dialect.upper()} (assume latest stable version)
         return query
     
     def _validate_syntax(self, query: str) -> Tuple[bool, Optional[List[str]]]:
-        """Validate SQL syntax."""
+        """Validate SQL syntax with comprehensive checks."""
         if not self.config.syntax_check_enabled:
             return True, None
         
         errors = []
+        query_stripped = query.strip()
+        
+        # Empty query check
+        if not query_stripped:
+            errors.append("Query is empty")
+            return False, errors
         
         try:
             # Parse the query
@@ -193,12 +231,29 @@ Version: {self.config.dialect.upper()} (assume latest stable version)
                 return False, errors
             
             # Check for common issues
-            query_upper = query.upper()
+            query_upper = query_stripped.upper()
             
             # Must start with valid SQL command
             valid_starts = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'WITH']
-            if not any(query_upper.strip().startswith(cmd) for cmd in valid_starts):
+            if not any(query_upper.startswith(cmd) for cmd in valid_starts):
                 errors.append("Query must start with SELECT, INSERT, UPDATE, DELETE, or WITH")
+            
+            # Check for SELECT queries specifically
+            if query_upper.startswith('SELECT'):
+                # Must have FROM clause for SELECT
+                if 'FROM' not in query_upper:
+                    errors.append("SELECT query missing FROM clause")
+                
+                # Check for incomplete queries (ends with SQL keywords)
+                incomplete_endings = [
+                    'SELECT', 'FROM', 'WHERE', 'GROUP BY', 'ORDER BY', 
+                    'JOIN', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN',
+                    'ON', 'AND', 'OR', 'AS', ','
+                ]
+                for ending in incomplete_endings:
+                    if query_upper.rstrip().endswith(ending):
+                        errors.append(f"Query appears incomplete - ends with '{ending}'")
+                        break
             
             # Check for balanced parentheses
             if query.count('(') != query.count(')'):
@@ -213,7 +268,7 @@ Version: {self.config.dialect.upper()} (assume latest stable version)
             if double_quotes % 2 != 0:
                 errors.append("Unclosed double quotes")
             
-            # Format check
+            # Format check with sqlparse
             try:
                 formatted = sqlparse.format(
                     query,
@@ -228,8 +283,38 @@ Version: {self.config.dialect.upper()} (assume latest stable version)
         
         is_valid = len(errors) == 0
         logger.debug(f"Query validation: {'passed' if is_valid else 'failed'}")
+        if not is_valid:
+            logger.warning(f"Validation errors: {errors}")
         
         return is_valid, errors if not is_valid else None
+    
+    def _build_correction_prompt(
+        self,
+        question: str,
+        original_prompt: str,
+        previous_query: str,
+        validation_errors: List[str]
+    ) -> str:
+        """Build prompt for LLM to correct a failed query."""
+        error_list = '\n'.join(f'- {error}' for error in validation_errors)
+        
+        return f"""{original_prompt}
+
+IMPORTANT: Your previous attempt generated an INVALID query with the following errors:
+
+Previous Query:
+{previous_query}
+
+Validation Errors:
+{error_list}
+
+Please generate a CORRECTED query that fixes these specific errors. Make sure:
+1. The query is COMPLETE (no missing clauses)
+2. All parentheses and quotes are balanced
+3. SELECT queries include FROM clause
+4. The query does not end with a keyword or comma
+
+Return ONLY the corrected SQL query and confidence score."""
     
     def _fix_query(
         self,

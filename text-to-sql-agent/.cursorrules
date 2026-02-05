@@ -1,0 +1,106 @@
+# Cursor Rules for Text-to-SQL Agent Project
+
+## File Creation Policy
+
+**IMPORTANT: Do NOT create new files unless explicitly requested by the user.**
+
+### What NOT to Create:
+- ❌ Summary documentation files (.md files describing changes)
+- ❌ New test scripts when similar ones exist
+- ❌ Duplicate configuration files
+- ❌ Redundant helper scripts
+- ❌ Change logs or fix summaries
+- ❌ Quick reference guides
+- ❌ Status reports
+
+### Only Create Files When:
+- ✅ User explicitly asks for a specific file
+- ✅ Essential for the feature being implemented (e.g., a new module)
+- ✅ Required by the framework/tool (e.g., __init__.py)
+
+### When Making Changes:
+1. **Update existing files** instead of creating new ones
+2. **Modify existing documentation** in place (e.g., update README.md, not create NEW_README.md)
+3. **Use existing test scripts** instead of creating new test files
+4. **Ask before creating** if you think a new file might be needed
+
+## Code Changes Policy
+
+### Always:
+- ✅ Update existing files in place
+- ✅ Use existing test scripts (e.g., test_viz_fix.py)
+- ✅ Modify existing documentation files
+- ✅ Check for similar functionality before creating new code
+
+### Never (unless requested):
+- ❌ Create summary.md, fix.md, changes.md files
+- ❌ Create duplicate test scripts
+- ❌ Create new versions of files (e.g., config_v2.py)
+- ❌ Create backup files with timestamps
+
+## Documentation Policy
+
+### Existing Documentation Structure:
+```
+docs/
+  ├── README.md              - Main documentation index
+  ├── ARCHITECTURE.md        - System architecture
+  ├── DEPLOYMENT.md          - Deployment guide
+  ├── TOOLS.md               - Agent tools documentation
+  └── ...other docs          - Specific topic guides
+```
+
+### Rules:
+- ✅ Update existing docs in the `docs/` folder
+- ❌ Don't create new root-level .md files for changes
+- ❌ Don't create "SUMMARY" or "FIX" documentation files
+- ✅ Update README.md or relevant docs/ files instead
+
+## Testing Policy
+
+### Existing Test Structure:
+```
+test_viz_fix.py           - UI visualization tests
+test_validation.py        - SQL validation tests
+test_comprehensive.py     - Comprehensive test guide
+scripts/
+  └── create_telco_db.py  - Database setup
+```
+
+### Rules:
+- ✅ Use and update existing test files
+- ✅ Add tests to existing test scripts
+- ❌ Don't create new test files unless explicitly different purpose
+- ❌ Don't create test_v2.py, test_new.py, etc.
+
+## Communication Style
+
+### With User:
+- ✅ Explain what you changed directly in the response
+- ✅ Show code snippets if helpful
+- ❌ Don't say "I created a document explaining the changes"
+- ❌ Don't create files to communicate what you did
+
+### Example - Good:
+```
+"I fixed the UnboundLocalError by removing 3 local `import sys` 
+statements from gradio_simple.py. The code now uses the global 
+import at the top of the file."
+```
+
+### Example - Bad:
+```
+"I fixed the error and created UNBOUNDLOCALERROR_FIX.md to 
+document the changes."
+```
+
+## Summary
+
+**GOLDEN RULE: Only create files when explicitly asked. Update existing files instead.**
+
+If you're about to create a new file, ask yourself:
+1. Did the user specifically request this file?
+2. Can I update an existing file instead?
+3. Is this essential for the code to run?
+
+If all answers are "no", don't create the file.
