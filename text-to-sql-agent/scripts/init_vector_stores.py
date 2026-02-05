@@ -32,7 +32,7 @@ def main():
     logger.info(f"Vector store initialized: {config.vector_store.provider}")
     
     # Create metadata manager
-    metadata_manager = MetadataManager(vector_store, config.metadata)
+    metadata_manager = MetadataManager(vector_store, config.metadata, config.query)
     logger.info("Metadata manager initialized")
     
     # Index all tables

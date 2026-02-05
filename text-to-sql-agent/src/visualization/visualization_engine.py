@@ -31,32 +31,56 @@ class VisualizationEngine:
         rows: List[tuple]
     ) -> Dict[str, Any]:
         """
-        Create a table visualization.
+        Create a simple HTML table visualization (not Plotly).
         
-        Returns dict with 'type', 'data', and 'html'.
+        Returns dict with 'type', 'data', 'html', and 'dataframe'.
         """
         df = pd.DataFrame(rows, columns=columns)
         
-        # Create Plotly table
-        fig = go.Figure(data=[go.Table(
-            header=dict(
-                values=list(df.columns),
-                fill_color='paleturquoise',
-                align='left',
-                font=dict(size=12, color='black')
-            ),
-            cells=dict(
-                values=[df[col] for col in df.columns],
-                fill_color='lavender',
-                align='left',
-                font=dict(size=11, color='black')
-            )
-        )])
+        # Create lightweight HTML table (not 4.8MB Plotly blob!)
+        table_rows = []
         
-        fig.update_layout(
-            title="Query Results",
-            height=min(600, 50 + len(rows) * 30)
-        )
+        # Header
+        header_cells = ''.join([f'<th>{col}</th>' for col in columns])
+        table_rows.append(f'<tr>{header_cells}</tr>')
+        
+        # Data rows (limit to first 100 for display)
+        for row in rows[:100]:
+            cells = ''.join([f'<td>{val}</td>' for val in row])
+            table_rows.append(f'<tr>{cells}</tr>')
+        
+        html_table = f"""<style>
+.query-results-table {{
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    margin: 10px 0;
+}}
+.query-results-table th {{
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    border: none;
+}}
+.query-results-table td {{
+    padding: 10px 15px;
+    border-bottom: 1px solid #e2e8f0;
+}}
+.query-results-table tr:hover {{
+    background-color: #f7fafc;
+}}
+.query-results-table tr:last-child td {{
+    border-bottom: 2px solid #667eea;
+}}
+</style>
+<div style="overflow-x:auto;">
+<table class="query-results-table">
+{''.join(table_rows)}
+</table>
+</div>"""
         
         logger.info(f"Created table visualization: {len(rows)} rows x {len(columns)} columns")
         
@@ -66,8 +90,8 @@ class VisualizationEngine:
                 'columns': columns,
                 'rows': [list(row) for row in rows]
             },
-            'html': fig.to_html(),
-            'json': fig.to_json()
+            'html': html_table,  # Simple HTML (~2-5 KB, not 4.8 MB!)
+            'dataframe': df  # For Gradio DataFrame component
         }
     
     def create_chart(

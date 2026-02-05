@@ -37,8 +37,13 @@ class QueryGenerator:
         
         Returns dict with 'query', 'model_used', 'attempts', and 'validation_passed'.
         """
+        logger.debug(f"[QueryGenerator] Starting query generation for: {question}")
+        logger.debug(f"[QueryGenerator] Number of relevant tables: {len(relevant_tables)}")
+        logger.debug(f"[QueryGenerator] Table names: {[t.get('table_name') for t in relevant_tables]}")
+        
         # Build comprehensive prompt
         prompt = self._build_query_prompt(question, relevant_tables, similar_qa)
+        logger.debug(f"[QueryGenerator] Prompt built, length: {len(prompt)} chars")
         
         # System prompt with version info
         system_prompt = self._build_system_prompt()
@@ -53,6 +58,7 @@ class QueryGenerator:
             try:
                 # Build correction prompt if this is a retry
                 if attempt > 0 and previous_query and validation_errors:
+                    logger.debug(f"[QueryGenerator] Building correction prompt for attempt {attempt + 1}")
                     correction_prompt = self._build_correction_prompt(
                         question, prompt, previous_query, validation_errors
                     )
@@ -61,20 +67,28 @@ class QueryGenerator:
                     generation_prompt = prompt
                 
                 # Try generation with fallback
+                logger.debug(f"[QueryGenerator] Calling LLM for attempt {attempt + 1}")
                 result = self.llm_manager.generate_with_fallback(
                     prompt=generation_prompt,
                     system_prompt=system_prompt,
                     max_retries_per_model=self.config.max_retries_per_model
                 )
                 
+                logger.debug(f"[QueryGenerator] LLM response received, length: {len(result['text'])} chars")
+                logger.debug(f"[QueryGenerator] LLM response: {result['text'][:200]}...")
+                
                 # Extract SQL and confidence from response
                 query, llm_confidence = self._extract_sql_and_confidence(result['text'])
+                logger.debug(f"[QueryGenerator] Extracted query: {query}")
+                logger.debug(f"[QueryGenerator] LLM confidence: {llm_confidence}")
                 
                 # Validate syntax
                 is_valid, validation_errors = self._validate_syntax(query)
+                logger.debug(f"[QueryGenerator] Validation result: valid={is_valid}")
                 
                 if is_valid:
                     logger.info(f"✅ Valid SQL generated on attempt {attempt + 1}")
+                    logger.info(f"[QueryGenerator] Final query: {query}")
                     return {
                         'query': query,
                         'model_used': result['model_used'],
@@ -85,6 +99,7 @@ class QueryGenerator:
                     }
                 else:
                     logger.warning(f"❌ Validation failed on attempt {attempt + 1}: {validation_errors}")
+                    logger.debug(f"[QueryGenerator] Failed query was: {query}")
                     previous_query = query
                     
                     # If this is the last attempt, return with validation failure
@@ -101,6 +116,7 @@ class QueryGenerator:
                     
             except Exception as e:
                 logger.error(f"Query generation attempt {attempt + 1} failed: {e}")
+                logger.exception("[QueryGenerator] Full exception:")
                 if attempt == max_validation_retries - 1:
                     raise
                 # Continue to next attempt

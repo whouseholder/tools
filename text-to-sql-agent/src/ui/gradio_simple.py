@@ -123,6 +123,82 @@ def validate_sql_syntax(sql: str) -> tuple:
     return True, None
 
 
+def validate_question_relevance(question: str, db_schema: str) -> tuple:
+    """Validate if a question is relevant to the database and answerable.
+    
+    Returns: (is_valid, error_message)
+    """
+    if not question or not question.strip():
+        return False, "Empty question"
+    
+    # Check if question is too short or generic
+    if len(question.strip()) < 5:
+        return False, "Question is too short. Please ask a specific question about the data."
+    
+    # Use LLM to validate question relevance
+    validation_prompt = f"""Given this database schema:
+
+{db_schema}
+
+User question: "{question}"
+
+Determine if this question can be answered using the database. Return JSON:
+{{
+  "is_valid": true/false,
+  "reason": "explanation",
+  "category": "data_query|greeting|off_topic|unclear"
+}}
+
+Set "is_valid" to false if:
+- Question is a greeting or small talk (hi, hello, how are you)
+- Question is completely unrelated to data/database queries
+- Question asks about tables/columns that don't exist
+- Question is too vague to answer
+
+Set "is_valid" to true if:
+- Question asks for data from available tables
+- Question can be answered with SQL query"""
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a question validation expert. Determine if questions are relevant to database queries. Always respond with valid JSON."},
+                {"role": "user", "content": validation_prompt}
+            ],
+            temperature=0.0,
+            response_format={"type": "json_object"}
+        )
+        
+        content = response.choices[0].message.content.strip()
+        print(f"🤖 Question validation: {content}", file=sys.stderr)
+        
+        import json
+        validation_data = json.loads(content)
+        
+        is_valid = validation_data.get('is_valid', True)
+        reason = validation_data.get('reason', 'Unknown')
+        category = validation_data.get('category', 'unclear')
+        
+        if not is_valid:
+            # Provide helpful error messages based on category
+            if category == 'greeting':
+                return False, f"This appears to be a greeting. Please ask a question about the data instead.\n\nExample: 'What are the top 10 customers?'"
+            elif category == 'off_topic':
+                return False, f"This question is not related to the available database.\n\nReason: {reason}\n\nPlease ask questions about customers, transactions, plans, or usage data."
+            elif category == 'unclear':
+                return False, f"This question is unclear or too vague.\n\nReason: {reason}\n\nPlease be more specific about what data you want to see."
+            else:
+                return False, f"Cannot answer this question with the available data.\n\nReason: {reason}"
+        
+        return True, None
+        
+    except Exception as e:
+        print(f"⚠️ Question validation error: {e}", file=sys.stderr)
+        # If validation fails, allow the question through (fail open)
+        return True, None
+
+
 def generate_sql_with_retry(question: str, db_schema: str, max_retries: int = 3, auto_viz_enabled: bool = False) -> tuple:
     """Generate SQL query with validation and self-correction.
     
@@ -681,6 +757,20 @@ Check the **Visualization panel** on the right →"""
         sql_display = last_query.get("sql_display", "")
         
         return new_history, sql_display, SCHEMA, viz_fig
+    
+    # Validate question relevance before generating SQL
+    print("🔍 Validating question relevance...", file=sys.stderr)
+    is_valid_question, validation_msg = validate_question_relevance(question, SCHEMA)
+    
+    if not is_valid_question:
+        print(f"❌ Question validation failed: {validation_msg}", file=sys.stderr)
+        new_history = history + [
+            {"role": "user", "content": question},
+            {"role": "assistant", "content": f"❌ **Invalid Question**\n\n{validation_msg}\n\n💡 **Tip:** Ask questions about the available data in the database. For example:\n- What are the top customers?\n- Show revenue by plan type\n- How many active users are there?"}
+        ]
+        return new_history, "", SCHEMA, None
+    
+    print(f"✅ Question is valid", file=sys.stderr)
     
     # Not a follow-up - generate new SQL query with validation and retry
     sql, confidence, error, viz_rec = generate_sql_with_retry(question, SCHEMA, max_retries=3, auto_viz_enabled=auto_viz_enabled)

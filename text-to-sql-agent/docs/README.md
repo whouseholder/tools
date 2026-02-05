@@ -150,11 +150,6 @@ Start here if you're new to the project:
 - **CONTRIBUTING.md** - How to contribute
 - **LICENSE** - MIT License
 
-### Distribution Guides
-
-- **[MVP Package](MVP_PACKAGE.md)** - MVP distribution guide
-- **[Cleanup Summary](CLEANUP_SUMMARY.md)** - Project structure cleanup notes
-
 ---
 
 ## 🆘 Getting Help
@@ -195,15 +190,12 @@ docs/
 │   ├── DEPLOYMENT.md            # General deployment
 │   └── CLOUDERA_DEPLOYMENT.md   # Cloudera-specific
 │
-├── Technical
-│   ├── ARCHITECTURE.md          # System architecture
-│   ├── API.md                   # API reference
-│   ├── CONFIDENCE_SCORING.md    # Confidence system
-│   └── TELCO_DATABASE.md        # Database schema
-│
-└── Project Info
-    ├── MVP_PACKAGE.md           # Distribution guide
-    └── CLEANUP_SUMMARY.md       # Cleanup notes
+└── Technical
+    ├── ARCHITECTURE.md          # System architecture
+    ├── API.md                   # API reference
+    ├── CONFIDENCE_SCORING.md    # Confidence system
+    ├── TELCO_DATABASE.md        # Database schema
+    └── TOOLS.md                 # Tools reference
 ```
 
 ---

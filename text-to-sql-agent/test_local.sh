@@ -118,20 +118,22 @@ echo ""
 echo "Running quick functionality test..."
 python << 'EOF'
 import sys
-sys.path.insert(0, 'src')
+sys.path.insert(0, '.')
 
 try:
-    from agent.tools import ALL_TOOLS, get_tool_by_name
-    print(f"  ✓ Found {len(ALL_TOOLS)} tools")
+    from src.agent.agent import TextToSQLAgent
+    print("  ✓ TextToSQLAgent import successful")
     
-    from utils.config import load_config
+    from src.utils.config import load_config
     config = load_config()
     print("  ✓ Configuration loaded")
     
-    print("\n  All systems operational!")
+    print("\n  ✓ All systems operational!")
     sys.exit(0)
 except Exception as e:
     print(f"  ✗ Error: {e}")
+    import traceback
+    traceback.print_exc()
     sys.exit(1)
 EOF
 
@@ -146,12 +148,18 @@ echo ""
 echo "Your system is ready. Next steps:"
 echo ""
 echo "1. Launch Gradio UI:"
-echo "   ${GREEN}./launch_ui.sh${NC}"
+echo "   ${GREEN}./run_local.sh${NC}  (or: python launch.py)"
 echo ""
 echo "2. Open browser to:"
 echo "   ${BLUE}http://localhost:7860${NC}"
 echo ""
-echo "3. Click 'Initialize Agent' and start asking questions!"
+echo "3. Agent auto-initializes on launch - start asking questions!"
+echo ""
+echo "✓ Changes in this version:"
+echo "  • Using consolidated TextToSQLAgent (src/agent/agent.py)"
+echo "  • No manual initialization required"
+echo "  • Auto-viz checkbox for visualization control"
+echo "  • Reset conversation button for new sessions"
 echo ""
 echo "Example questions:"
 echo "  • What are the top 10 customers by lifetime value?"

@@ -22,9 +22,13 @@ class QuestionValidator:
         self.config = config
         logger.info("Question validator initialized")
     
-    def validate(self, question: str) -> Dict[str, any]:
+    def validate(self, question: str, conversation_history: Optional[List[Dict]] = None) -> Dict[str, any]:
         """
-        Validate a question.
+        Validate a question with optional conversation context.
+        
+        Args:
+            question: The question to validate
+            conversation_history: Optional list of previous messages with 'role', 'content', and optional 'metadata'
         
         Returns dict with 'valid', 'reason', and individual check results.
         """
@@ -46,9 +50,12 @@ class QuestionValidator:
             results['reason'] = length_reason
             return results
         
-        # Relevance check
+        # Context-aware relevance check (uses conversation history if available)
         if self.config.check_relevance:
-            relevance_valid, relevance_reason, relevance_score = self._check_relevance(question)
+            relevance_valid, relevance_reason, relevance_score = self._check_relevance_with_context(
+                question, 
+                conversation_history
+            )
             results['checks']['relevance'] = {
                 'valid': relevance_valid,
                 'reason': relevance_reason,
@@ -88,21 +95,90 @@ class QuestionValidator:
         
         return True, None
     
-    def _check_relevance(self, question: str) -> Tuple[bool, Optional[str], float]:
-        """Check if question is relevant to data/SQL queries."""
-        prompt = f"""Analyze if the following question is relevant to querying a database or analyzing data.
+    def _check_relevance_with_context(
+        self, 
+        question: str, 
+        conversation_history: Optional[List[Dict]] = None
+    ) -> Tuple[bool, Optional[str], float]:
+        """Check if question is relevant to data/SQL queries, considering conversation context."""
+        
+        # Build context summary from conversation history
+        context_summary = ""
+        if conversation_history:
+            # Get last few messages for context
+            recent_messages = conversation_history[-5:] if len(conversation_history) > 5 else conversation_history
+            
+            for msg in recent_messages:
+                role = msg.get('role', 'unknown')
+                content = msg.get('content', '')[:200]  # Truncate long messages
+                metadata = msg.get('metadata', {})
+                
+                if role == 'user':
+                    context_summary += f"\nPrevious user question: {content}"
+                elif role == 'assistant' and metadata.get('sql_query'):
+                    context_summary += f"\nExecuted SQL: {metadata['sql_query'][:100]}"
+        
+        # Build prompt with context awareness
+        if context_summary:
+            prompt = f"""Analyze if the following question is relevant given the conversation context.
+
+CONVERSATION CONTEXT:{context_summary}
+
+CURRENT QUESTION: {question}
+
+Is this question:
+1. About data, analytics, or visualizations?
+2. A reasonable follow-up to the previous conversation?
+
+VALIDATION RULES:
+✅ ANSWER "relevant: true" FOR:
+- ANY standalone data question (customers, revenue, users, transactions, etc.)
+- Visualization requests related to previous data (show as chart, plot this, make it a pie chart)
+- Analytics questions that build on previous queries (show trends, compare with, break down by)
+- Follow-ups that reference previous results (these customers, those users, that data, it, them)
+- Questions about the same entities discussed in conversation
+
+❌ ANSWER "relevant: false" FOR:
+- Follow-ups about COMPLETELY DIFFERENT topics (e.g., previous Q about customers, current Q about pizza preferences)
+- Questions about non-database topics (weather, sports, news, general knowledge)
+- Pure chitchat or greetings
+- Nonsensical input
+
+IMPORTANT: If the question references "these", "those", "that", "them", "it" - check if it's related to the conversation context.
+Example: Previous Q: "top customers", Current Q: "what pizza do they like?" → FALSE (unrelated)
+Example: Previous Q: "top customers", Current Q: "what is their churn risk?" → TRUE (related)
+
+Respond with a JSON object:
+{{"relevant": true/false, "reason": "brief explanation", "confidence": 0.0-1.0}}"""
+        else:
+            # No context - use simple relevance check
+            prompt = f"""Analyze if the following question is about data that could be in a database.
 
 Question: {question}
 
-Is this a question that can be answered with a SQL query against a database?
+Is this question asking about data, analytics, or visualizations?
 
-Respond with a JSON object in this exact format:
-{{"relevant": true/false, "reason": "brief explanation", "confidence": 0.0-1.0}}"""
+ANSWER "relevant: true" FOR:
+- ANY question about data (customers, revenue, users, transactions, metrics, KPIs, etc.)
+- ANY visualization request (charts, graphs, plots, show data, display data)
+- ANY analytics question (trends, patterns, comparisons, rankings)
+- ANY data formatting request (as table, as chart, sorted by, grouped by)
+
+ONLY ANSWER "relevant: false" FOR:
+- Questions about completely unrelated topics (weather, sports scores, news, celebrities)
+- Questions that CANNOT involve database data at all
+- Pure conversational questions (greetings, chitchat)
+- Nonsensical or gibberish input
+
+BE LENIENT - when in doubt, answer true.
+
+Respond with a JSON object:
+{{"relevant": true, "reason": "data/analytics question", "confidence": 0.95}}"""
         
         try:
             response = self.llm_manager.generate(
                 prompt=prompt,
-                system_prompt="You are a question classifier. Respond ONLY with valid JSON.",
+                system_prompt="You are a context-aware question validator. Analyze if questions are relevant to database queries, considering conversation history. Respond ONLY with valid JSON.",
                 use_large_model=False
             )
             
@@ -131,16 +207,35 @@ Respond with a JSON object in this exact format:
             logger.warning(f"Relevance check failed: {e}, assuming relevant")
             return True, None, 1.0
     
+    def _check_relevance(self, question: str) -> Tuple[bool, Optional[str], float]:
+        """Check if question is relevant (backward compatibility - no context)."""
+        return self._check_relevance_with_context(question, None)
+    
     def _check_answerability(self, question: str) -> Tuple[bool, Optional[str]]:
         """Check if question is answerable."""
-        prompt = f"""Analyze if the following question is specific and answerable with data.
+        prompt = f"""Analyze if the following question could be answered with database data.
 
 Question: {question}
 
-Is this question clear, specific, and answerable with database queries?
+Can this question be answered by querying or visualizing database data?
+
+ANSWER "answerable: true" FOR:
+- Questions about specific metrics (churn, revenue, count, average, etc.)
+- Questions with references like "these", "that", "it" (likely follow-ups)
+- Visualization requests for existing data
+- Questions that mention data entities (customers, users, transactions, etc.)
+- Questions that could be answered if we knew the database schema
+
+ONLY ANSWER "answerable: false" FOR:
+- Questions requiring external data not in any database (weather, stock prices)
+- Questions requiring prediction of future events
+- Questions requiring subjective opinions
+- Completely nonsensical questions
+
+BE LENIENT - if it could possibly be answered with database data, answer true.
 
 Respond with a JSON object in this exact format:
-{{"answerable": true/false, "reason": "brief explanation"}}"""
+{{"answerable": true, "reason": "data question"}}"""
         
         try:
             response = self.llm_manager.generate(

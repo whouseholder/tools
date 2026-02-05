@@ -892,12 +892,12 @@ Use this to **maintain conversation state**.
 ### Execute Individual Tool
 
 ```python
-from src.agent.tool_agent import ToolBasedAgent
+from src.agent.agent import TextToSQLAgent
 from src.utils.config import load_config
 
 # Initialize
 config = load_config()
-agent = ToolBasedAgent(config)
+agent = TextToSQLAgent(config)
 
 # Execute a tool
 result = agent.execute_tool(
@@ -938,10 +938,10 @@ Each tool can be tested independently:
 
 ```python
 import pytest
-from src.agent.tool_agent import ToolBasedAgent
+from src.agent.agent import TextToSQLAgent
 
 def test_validate_question_tool():
-    agent = ToolBasedAgent(config)
+    agent = TextToSQLAgent(config)
     
     # Test valid question
     result = agent.execute_tool(

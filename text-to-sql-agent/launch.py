@@ -95,13 +95,9 @@ def main():
     
     # Launch Gradio
     try:
-        # Check if we can use full agent or need simplified mode
-        can_use_full = True
-        try:
-            from src.agent.agent import TextToSQLAgent
-        except ImportError as e:
-            logger.warning(f"Full agent not available: {e}")
-            can_use_full = False
+        # Use gradio_app.py with full agent
+        logger.info("Launching Gradio UI with full agent")
+        from src.ui.gradio_app import launch_ui
         
         # Try multiple ports if needed
         ports_to_try = [7860, 7861, 7862, 7863, 7864]
@@ -109,18 +105,9 @@ def main():
         
         for port in ports_to_try:
             try:
-                if can_use_full:
-                    logger.info(f"Launching with full agent on port {port}")
-                    from src.ui.gradio_app import launch_ui
-                    launch_ui(server_name="127.0.0.1", server_port=port, share=False)
-                else:
-                    logger.info(f"Launching in simplified mode on port {port}")
-                    import sys
-                    sys.path.insert(0, 'src/ui')
-                    import gradio_simple
-                    print(f"\n✅ UI successfully launched at: http://localhost:{port}\n")
-                    gradio_simple.demo.launch(server_name="127.0.0.1", server_port=port, share=False)
-                
+                logger.info(f"Attempting to launch on port {port}")
+                print(f"\n✅ UI successfully launched at: http://localhost:{port}\n")
+                launch_ui(server_name="127.0.0.1", server_port=port, share=False)
                 launched = True
                 break
             except OSError as e:

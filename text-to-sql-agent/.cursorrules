@@ -1,5 +1,25 @@
 # Cursor Rules for Text-to-SQL Agent Project
 
+## 🚨 CRITICAL RULE: NO SUMMARY/FIX DOCUMENTATION FILES 🚨
+
+**NEVER create summary, fix, or implementation documentation files unless the user explicitly asks for them.**
+
+### Forbidden Files (DO NOT CREATE):
+- ❌ FIX_*.md files
+- ❌ SUMMARY_*.md files  
+- ❌ IMPLEMENTATION_*.md files
+- ❌ DEBUG_*.md files
+- ❌ Any .md file documenting what you just did
+- ❌ Change logs, fix logs, status reports
+
+### Why This Matters:
+These files clutter the repository and are rarely useful. The user can see:
+1. Your response explaining what you did
+2. The git diff showing what changed
+3. Code comments if needed
+
+**If you're tempted to create a doc explaining your changes → DON'T. Just explain it in your response to the user.**
+
 ## File Creation Policy
 
 **IMPORTANT: Do NOT create new files unless explicitly requested by the user.**
